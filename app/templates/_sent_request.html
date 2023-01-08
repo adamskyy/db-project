@@ -1,0 +1,25 @@
+<tbody>
+    <tr>
+        <td><a href="{{ url_for('main.user', username=request.user.username) }}">{{ request.user.username }}</a>
+        </td>
+        <td width="32px"><img src="{{ request.user.avatar(32) }}"></td>
+        <td>{{ request.user.about_me }}</td>
+        <td>{{ request.user.last_seen }}</td>
+        <td>{{ request.request_date }}</td>
+        <td>{{ request.status }}</td>
+        <td>
+            {% if request.status == 'pending'%}
+            <form action="{{ url_for('main.accept_request', request_id=request.id) }}" method="POST">
+                <button type="submit" class="btn btn-success">Accept</button>
+            </form>
+            <form action="{{ url_for('main.decline_request', request_id=request.id) }}" method="POST">
+                <button type="submit" class="btn btn-danger">Decline</button>
+            </form>
+            {% else %}
+            <form action="{{ url_for('main.discard_membership_request', request_id=request.id) }}" method="POST">
+                <button type="submit" class="btn btn-secondary">Remove</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+</tbody>

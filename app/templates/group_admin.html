@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="container">
+    <table class="table table-hover">
+        <tr>
+            <td width="128px"><img src="{{ group.avatar(128) }}"></td>
+            <td>
+                <h1>Group name: {{ group.name }}</h1>
+                <p>Group owner: {{ group.owner.username }}</p>
+                <p>Creation date: {{ group.date_created }}</p>
+                {% if group.description %}<p>Group description: {{ group.description }}</p>{% endif %}
+            </td>
+            <td>
+                <form action="{{ url_for('main.edit_group', group_id=group.id) }}" method="GET">
+                    <button type="submit" class="btn btn-primary mr-3">Edit your group</button>
+                </form>
+                <br>
+                <form action="{{ url_for('main.delete_group', group_id=group.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary mr-3">Delete group</button>
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h2>Current members of your group:</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">User Name</th>
+                            <th scope="col">User Avatar</th>
+                            <th scope="col">User Description</th>
+                            <th scope="col">User Last Seen</th>
+                            <th scope="col">User Date Added</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    {% for user in group.users%}
+                    {% include '_user.html' %}
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h2>User's that requested to join to your group:</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">User Name</th>
+                            <th scope="col">User Avatar</th>
+                            <th scope="col">User Description</th>
+                            <th scope="col">User Last Seen</th>
+                            <th scope="col">Request Date</th>
+                            <th scope="col">Request status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    {% for request in group.membership_requests %}
+                    {% include '_sent_request.html' %}
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h2>User's that you've send invitation to your group:</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">User Name</th>
+                            <th scope="col">User Avatar</th>
+                            <th scope="col">User Description</th>
+                            <th scope="col">User Last Seen</th>
+                            <th scope="col">Invitation send Date</th>
+                            <th scope="col">Invitation status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    {% for invitation in group.invitations %}
+                    {% include '_sent_invitation.html' %}
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <hr>
+</div>
+{% endblock %}

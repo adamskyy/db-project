@@ -2,6 +2,73 @@
 
 {% block app_content %}
 <div class="container">
-    <h1>Main Page</h1>
+    {% if current_user.is_authenticated %}
+    <div class="row">
+        <div class="col-4">
+            <h4>Available actions:</h4>
+            <br>
+            <div class="btn-group-vertical">
+                <form action="{{ url_for('main.create_group') }}" method="GET">
+                    <button type="submit" class="btn btn-primary my-3">Create a new group</button>
+                </form>
+                <form action="{{ url_for('main.explore') }}" method="GET">
+                    <button type="submit" class="btn btn-primary my-3">Explore other groups/users</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-4">
+            <h4>Explore your groups:</h4>
+            <br>
+            <div class="card-columns">
+                {% for group in groups.items %}
+                <div class="card bg-light mb-1" style="max-width: 10rem;">
+                    <div class="card-header text-center">
+                        <h5>{{ group.name }}</h5>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="{{ group.avatar(64) }}" alt="Group Avatar" class="img-thumbnail">
+                        <br>
+                        <br>
+                        <a href="" class="btn btn-primary">Visit Group</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="text-right">
+                <a href="{{ url_for('main.index', page=groups.prev_num) }}" class="btn btn-outline-dark
+               {% if groups.page == 1 %}disabled{% endif %}">
+                    &laquo;
+                </a>
+                <!-- Loop through the number of pages to display a link for each-->
+                {% for page_num in groups.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                <!-- Check for the active page and set the link to "Active"-->
+                {% if groups.page == page_num %}
+                <a href="{{ url_for('main.index', page=page_num) }}" class="btn btn-dark">
+                    {{ page_num }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('main.index', page=page_num) }}" class="btn btn-outline-dark">
+                    {{ page_num }}
+                </a>
+                {% endif %}
+                {% else %}
+                ...
+                {% endif %}
+                {% endfor %}
+                <a href="{{ url_for('main.index', page=groups.next_num) }}" class="btn btn-outline-dark
+               {% if groups.page == groups.pages %}disabled{% endif %}">
+                    &raquo;
+                </a>
+            </div>
+            <p class="text-right mt-2">
+                Showing page {{ groups.page }} of {{ groups.pages }}
+            </p>
+        </div>
+        <div class="col-4">
+            <h4>This column can be used for some accout balance and creating payments:</h4>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

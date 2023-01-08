@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="container">
+    <div class="row">
+        <h1>Registered groups:</h1>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Group Name</th>
+                        <th>Group Avatar</th>
+                        <th>Group Description</th>
+                        <th>Group Owner Name</th>
+                        <th>Group Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in groups.items %}
+                    <tr>
+                        <th scope="row">{{ loop.index }}</th>
+                        <td>{{ group.name }}</td>
+                        <td><img src="{{ group.avatar(32) }}"></td>
+                        <td>{{ group.description }}</td>
+                        <td>{{ group.owner.username }}</td>
+                        <td>{{ group.date_created }}</td>
+                        <td>
+                            <form action="{{ url_for('main.group', groupname=group.name) }}" method="GET">
+                                <button type="submit" class="btn btn-primary">Visit group page</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination Links-->
+        <div class="text-right">
+            <a href="{{ url_for('main.explore', page_group=groups.prev_num) }}" class="btn btn-outline-dark
+               {% if groups.page == 1 %}disabled{% endif %}">
+                &laquo;
+            </a>
+            <!-- Loop through the number of pages to display a link for each-->
+            {% for page_num_group in groups.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num_group %}
+            <!-- Check for the active page and set the link to "Active"-->
+            {% if groups.page == page_num_group %}
+            <a href="{{ url_for('main.explore', page_group=page_num_group) }}" class="btn btn-dark">
+                {{ page_num_group }}
+            </a>
+            {% else %}
+            <a href="{{ url_for('main.explore', page_group=page_num_group) }}" class="btn btn-outline-dark">
+                {{ page_num_group }}
+            </a>
+            {% endif %}
+            {% else %}
+            ...
+            {% endif %}
+            {% endfor %}
+            <a href="{{ url_for('main.explore', page_group=groups.next_num) }}" class="btn btn-outline-dark
+               {% if groups.page == groups.pages %}disabled{% endif %}">
+                &raquo;
+            </a>
+        </div>
+        <p class="text-right mt-3">
+            Showing page {{ groups.page }} of {{ groups.pages }}
+        </p>
+    </div>
+    <div class="row">
+        <h1>Registered users:</h1>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>User Name</th>
+                        <th>User Avatar</th>
+                        <th>User Description</th>
+                        <th>User Last Seen</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.items %}
+                    <tr>
+                        <th scope="row">{{ loop.index }}</th>
+                        <td>{{ user.username }}</td>
+                        <td><img src="{{ user.avatar(32) }}"></td>
+                        <td>{{ user.about_me }}</td>
+                        <td>{{ user.last_seen }}</td>
+                        <td>
+                            <form action="{{ url_for('main.user', username=user.username) }}" method="GET">
+                                <button type="submit" class="btn btn-primary">Visit user page</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination Links-->
+        <div class="text-right">
+            <a href="{{ url_for('main.explore', page_group=groups.prev_num, page_user=users.prev_num) }}" class="btn btn-outline-dark
+                       {% if users.page == 1 %}disabled{% endif %}">
+                &laquo;
+            </a>
+            <!-- Loop through the number of pages to display a link for each-->
+            {% for page_num_user in users.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num_user %}
+            <!-- Check for the active page and set the link to "Active"-->
+            {% if users.page == page_num_user %}
+            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=page_num_user) }}"
+                class="btn btn-dark">
+                {{ page_num_user }}
+            </a>
+            {% else %}
+            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=page_num_user) }}"
+                class="btn btn-outline-dark">
+                {{ page_num_user }}
+            </a>
+            {% endif %}
+            {% else %}
+            ...
+            {% endif %}
+            {% endfor %}
+            <a href="{{ url_for('main.explore', page_group=groups.next_num, page_user=users.next_num) }}" class="btn btn-outline-dark
+                       {% if users.page == users.pages %}disabled{% endif %}">
+                &raquo;
+            </a>
+        </div>
+        <p class="text-right mt-3">
+            Showing page {{ users.page }} of {{ users.pages }}
+        </p>
+    </div>
+</div>
+{% endblock %}

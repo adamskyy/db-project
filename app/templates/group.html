@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="container">
+    <table class="table table-hover">
+        <tr>
+            <td width="128px"><img src="{{ group.avatar(128) }}"></td>
+            <td>
+                <h1>Group name: {{ group.name }}</h1>
+                <p>Group owner: {{ group.owner.username }}</p>
+                <p>Creation date: {{ group.date_created }}</p>
+                {% if group.description %}<p>Group description: {{ group.description }}</p>{% endif %}
+            </td>
+            {% if group.is_member(current_user) %}
+            <td>
+                <form action="{{ url_for('main.quit_from_group', group_id=group.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary mr-3">Leave the group</button>
+                </form>
+            </td>
+            {% endif %}
+        </tr>
+        {% if current_user.is_invited(group) %}
+        <tr>
+            <td class="text-center" colspan="2">
+                <div class="mx-auto">
+                    <div class="card bg-light mb-3" style="max-width: 20rem;">
+                        <div class="card-header text-center">
+                            <h4>Invitation</h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">
+                                You were invited to this group on <strong>{{
+                                    current_user.get_invitation(group).invitation_date }}</strong>.
+                            </p>
+                            <div class="text-center">
+                                {% if current_user.get_invitation(group).status == 'pending' %}
+                                <form
+                                    action="{{ url_for('main.accept_invitation', invitation_id=current_user.get_invitation(group).id) }}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-primary mr-3">Accept</button>
+                                </form>
+                                <form
+                                    action="{{ url_for('main.decline_invitation', invitation_id=current_user.get_invitation(group).id) }}"
+                                    method="POST">
+                                    <button type="submit" class="btn btn-secondary">Decline</button>
+                                </form>
+                                {% else %}
+                                <p class="card-text">
+                                    Status of the invitation: <strong>{{ current_user.get_invitation(group).status
+                                        }}</strong>.
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% if not current_user.has_asked_for_membership(group) and not group.is_member(current_user) %}
+        <tr>
+            <td colspan="2">
+                <div class="card-body">
+                    <p class="card-text">
+                        You can ask to join this group here:
+                    </p>
+                    <div class="text-center">
+                        <form action="{{ url_for('main.request_membership', group_id=group.id) }}" method="POST">
+                            <button type="submit" class="btn btn-primary mr-3">Ask to join</button>
+                        </form>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% elif not group.is_member(current_user) %}
+        <tr>
+            <td colspan="2">
+                <div class="card-body">
+                    <p class="card-text">
+                        You've already asked to join this group on {{
+                        current_user.get_membership_request(group).request_date}}.<br>
+                        Status of the membership request:
+                        <strong>{{ current_user.get_membership_request(group).status }}</strong>.
+                    </p>
+                    <div class="text-center">
+                        {% if current_user.get_membership_request(group).status != 'cancelled' %}
+                        <form
+                            action="{{ url_for('main.cancel_membership_request', request_id=current_user.get_membership_request(group).id) }}"
+                            method="POST">
+                            <button type="submit" class="btn btn-primary mr-3">Cancel request</button>
+                        </form>
+                        <br>
+                        {% endif %}
+                        <form
+                            action="{{ url_for('main.discard_membership_request', request_id=current_user.get_membership_request(group).id) }}"
+                            method="POST">
+                            <button type="submit" class="btn btn-primary mr-3">Discard membership request</button>
+                        </form>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        {% endif %}
+        {% if group.is_member(current_user) %}
+        <tr>
+            <td colspan="2">
+                <h2>Current members of this group:</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">User Name</th>
+                            <th scope="col">User Avatar</th>
+                            <th scope="col">User Description</th>
+                            <th scope="col">User Last Seen</th>
+                            <th scope="col">User Date Added</th>
+                        </tr>
+                    </thead>
+                    {% for user in group.users%}
+                    {% include '_user.html' %}
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endif %}
+
+    </table>
+
+    <hr>
+</div>
+{% endblock %}

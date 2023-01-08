@@ -1,0 +1,24 @@
+<tbody>
+    <tr>
+        <td><a href="{{ url_for('main.group', groupname=membership_request.group.name) }}">{{
+                membership_request.group.name
+                }}</a> </td>
+        <td width="32px"><img src="{{ membership_request.group.avatar(32) }}"></td>
+        <td>{{ membership_request.group.description }}</td>
+        <td>{{ membership_request.group.owner.username }}</td>
+        <td>{{ membership_request.request_date }}</td>
+        <td>{{ membership_request.status }}</td>
+        <td>
+            {% if membership_request.status != 'cancelled' %}
+            <form action="{{ url_for('main.cancel_membership_request', request_id=membership_request.id) }}"
+                method="POST">
+                <button type="submit" class="btn btn-primary mr-3">Cancel request</button>
+            </form>
+            {% endif %}
+            <form action="{{ url_for('main.discard_membership_request', request_id=membership_request.id) }}"
+                method="POST">
+                <button type="submit" class="btn btn-primary mr-3">Discard membership request</button>
+            </form>
+        </td>
+    </tr>
+</tbody>

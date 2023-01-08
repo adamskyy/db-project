@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="container">
+    <form action="" method="post" class="bg-white p-5">
+        <legend class="border-bottom">Edit your group</legend>
+        <br>
+        {{ form.hidden_tag() }}
+        <div class="form-group my-2">
+            {{ form.group_name.label(class="form-label") }}
+            {% if form.group_name.errors %}
+            {{ form.group_name(class="form-control is-invalid") }}
+            <div class="invalid-feedback">
+                {% for error in form.group_name.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            {{ form.group_name(class="form-control", size=32) }}
+            {% endif %}
+        </div>
+        <div class="form-group my-2">
+            {{ form.description.label(class="form-label") }}
+            {% if form.description.errors %}
+            {{ form.description(class="form-control is-invalid", cols=50, rows=4) }}
+            <div class="invalid-feedback">
+                {% for error in form.description.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            {{ form.description(class="form-control", cols=50, rows=4) }}
+            {% endif %}
+        </div>
+        <div class="form-group my-2">
+            <p>To add new members, remember that they cannot have any pending or cancelled requests or invites. You
+                should delete them first!</p>
+            {{ form.members.label(class="form-label") }}
+            {% if form.members.errors %}
+            {{ form.members(class="form-control is-invalid") }}
+            <div class="invalid-feedback">
+                {% for error in form.members.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            {{ form.members(class="selectpicker", multiple=True) }}
+            {% endif %}
+        </div>
+        <h2>Current members of your group:</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">User Name</th>
+                    <th scope="col">User Avatar</th>
+                    <th scope="col">User Description</th>
+                    <th scope="col">User Last Seen</th>
+                    <th scope="col">User Date Added</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            {% for user in group.users %}
+            {% include '_user.html' %}
+            {% endfor %}
+        </table>
+        <div class="form-group my-2">
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}

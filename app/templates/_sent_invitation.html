@@ -1,0 +1,25 @@
+<tbody>
+    <tr>
+        <td><a href="{{ url_for('main.user', username=invitation.user.username) }}">{{ invitation.user.username }}</a>
+        </td>
+        <td width="32px"><img src="{{ invitation.user.avatar(32) }}"></td>
+        <td>{{ invitation.user.about_me }}</td>
+        <td>{{ invitation.user.last_seen }}</td>
+        <td>{{ invitation.invitation_date }}</td>
+        <td>{{ invitation.status }}</td>
+        <td>
+            {% if invitation.status == 'pending'%}
+            <form action="{{ url_for('main.cancel_invitation', invitation_id=invitation.id) }}" method="POST">
+                <button type="submit" class="btn btn-primary mr-3">Cancel</button>
+            </form>
+            <form action="{{ url_for('main.remove_invitation', invitation_id=invitation.id) }}" method="POST">
+                <button type="submit" class="btn btn-secondary">Remove</button>
+            </form>
+            {% else %}
+            <form action="{{ url_for('main.remove_invitation', invitation_id=invitation.id) }}" method="POST">
+                <button type="submit" class="btn btn-secondary">Remove</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+</tbody>

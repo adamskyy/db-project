@@ -1,0 +1,23 @@
+<tbody>
+    <tr>
+        <td><a href="{{ url_for('main.user', username=user.username) }}">{{ user.username }}</a>
+        </td>
+        <td width="32px"><img src="{{ user.avatar(32) }}"></td>
+        <td>{{ user.about_me }}</td>
+        <td>{{ user.last_seen }}</td>
+        <td>{{ user.date_joined(group) }}</td>
+        {% if current_user.id == group.owner.id and not current_user.id == user.id %}
+        <td>
+            <form action="{{ url_for('main.remove_user', group_id=group.id, user_id=user.id) }}" method="POST">
+                <button type="submit" class="btn btn-danger">Remove</button>
+            </form>
+        </td>
+        {% elif current_user.id == group.owner.id and current_user.id == user.id %}
+        <td>
+            <form action="{{ url_for('main.remove_user', group_id=group.id, user_id=user.id) }}" method="POST">
+                <button type="submit" class="btn btn-danger disabled">Remove</button>
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+</tbody>

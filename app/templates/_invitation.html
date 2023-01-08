@@ -1,0 +1,22 @@
+<tbody>
+    <tr>
+        <td><a href="{{ url_for('main.group', groupname=invitation.group.name) }}">{{ invitation.group.name }}</a> </td>
+        <td width="32px"><img src="{{ invitation.group.avatar(32) }}"></td>
+        <td>{{ invitation.group.description }}</td>
+        <td>{{ invitation.group.owner.username }}</td>
+        <td>{{ invitation.invitation_date }}</td>
+        <td>{{ invitation.status }}</td>
+        <td>
+            {% if invitation.status == 'pending'%}
+            <form action="{{ url_for('main.accept_invitation', invitation_id=invitation.id) }}" method="POST">
+                <button type="submit" class="btn btn-success">Accept</button>
+            </form>
+            <form action="{{ url_for('main.decline_invitation', invitation_id=invitation.id) }}" method="POST">
+                <button type="submit" class="btn btn-danger">Decline</button>
+            </form>
+            {% else %}
+            <p>You've already answered this invitation</p>
+            {% endif %}
+        </td>
+    </tr>
+</tbody>

@@ -4,7 +4,7 @@ from app import db
 from werkzeug.urls import url_parse
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
-from app.models import User
+from app.models import User, Invitation
 from app.email import send_password_reset_email
 
 @bp.route('/login', methods=['GET', 'POST'])
@@ -72,3 +72,4 @@ def reset_password(token):
         flash('Your password has been updated. You are now able to log in!', 'success')
         return redirect(url_for('auth.login'))
     return render_template('auth/reset_password.html', title='Password reset', form=form)
+
