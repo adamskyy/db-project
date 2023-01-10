@@ -19,7 +19,6 @@ def index():
     if current_user.is_authenticated:
         page = request.args.get('page', 1, type=int)
         groups_id = [group.id for group in current_user.groups]
-
         groups = Group.query.filter(Group.id.in_(groups_id)).paginate(page=page, per_page=3)
         return render_template('index.html', title='index', groups=groups)
 
@@ -29,7 +28,20 @@ def index():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template('user.html', title='User page', user=user)
+    if current_user.username == username:
+        page_group = request.args.get('page_group', 1, type=int)
+        page_invitation = request.args.get('page_invitation', 1, type=int)
+        page_request = request.args.get('page_request', 1, type=int)
+        groups_id = [group.id for group in user.groups]
+        groups = Group.query.filter(Group.id.in_(groups_id)).paginate(page=page_group, per_page=1)
+        invitations = Invitation.query.filter_by(user_id=user.id).paginate(page=page_invitation, per_page=1)
+        requests = MembershipRequest.query.filter_by(user_id=user.id).paginate(page=page_request, per_page=1)
+        return render_template('user.html', title='User page', user=user, groups=groups, invitations=invitations, requests=requests)
+    users_groups_id = [group.id for group in user.groups]
+    common_groups_id = [group.id for group in current_user.groups if group.id in users_groups_id]
+    page_common_group = request.args.get('page_common_group', 1, type=int)
+    common_groups = Group.query.filter(Group.id.in_(common_groups_id)).paginate(page=page_common_group, per_page=1)
+    return render_template('user.html', title='User page', user=user, common_groups=common_groups)
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -85,11 +97,19 @@ def decline_invitation(invitation_id):
 @login_required
 def group(groupname):
     group = Group.query.filter_by(name=groupname).first_or_404()
-    print(current_user.id)
-    print(group.owner.id)
     if current_user.id == group.owner.id:
-        return render_template('group_admin.html', title='Group page', group=group)
-    return render_template('group.html', title='Group page', group=group)
+        page_user = request.args.get('page_user', 1, type=int)
+        page_request = request.args.get('page_request', 1, type=int)
+        page_invitation = request.args.get('page_invitation', 1, type=int)
+        users_id = [user.id for user in group.users]
+        group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=1)
+        group_requests = MembershipRequest.query.filter_by(group_id=group.id).paginate(page=page_request, per_page=1)
+        group_invitations = Invitation.query.filter_by(group_id=group.id).paginate(page=page_invitation, per_page=1)
+        return render_template('group_admin.html', title='Group page', group=group, group_requests=group_requests, group_users=group_users, group_invitations=group_invitations)
+    page_user = request.args.get('page_user', 1, type=int)
+    users_id = [user.id for user in group.users]
+    group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=1)
+    return render_template('group.html', title='Group page', group=group, group_users=group_users)
 
 
 @bp.route('/remove_user/<group_id>/<user_id>', methods=['GET', 'POST'])
@@ -243,7 +263,7 @@ def delete_account(user_id):
 def explore():
     page_group = request.args.get('page_group', 1, type=int)
     page_user = request.args.get('page_user', 1, type=int)
-    groups = Group.query.paginate(page=page_group, per_page=5)
-    users = User.query.paginate(page=page_user, per_page=5)
+    groups = Group.query.paginate(page=page_group, per_page=2)
+    users = User.query.paginate(page=page_user, per_page=2)
     return render_template('explore.html', title='index', groups=groups, users=users)
 

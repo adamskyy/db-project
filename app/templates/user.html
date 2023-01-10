@@ -35,10 +35,46 @@
                                 <th scope="col">Members</th>
                             </tr>
                         </thead>
-                        {% for group in current_user.groups %}
+                        {% for group in groups.items %}
                         {% include '_group.html' %}
                         {% endfor %}
                     </table>
+                    <!-- Pagination Links-->
+                    <div class="text-right">
+                        <a href="{{ url_for('main.user', username=user.username, page_group=groups.prev_num, page_invitation=invitations.page, page_request=requests.page) }}"
+                            class="btn btn-outline-dark
+                                   {% if groups.page == 1 %}disabled{% endif %}">
+                            &laquo;
+                        </a>
+                        <!-- Loop through the number of pages to display a link for each-->
+                        {% for page_num_group in groups.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                        right_current=2) %}
+                        {% if page_num_group %}
+                        <!-- Check for the active page and set the link to "Active"-->
+                        {% if groups.page == page_num_group %}
+                        <a href="{{ url_for('main.user', username=user.username, page_group=page_num_group,  page_invitation=invitations.page, page_request=requests.page) }}"
+                            class="btn btn-dark">
+                            {{ page_num_group }}
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('main.user', username=user.username, page_group=page_num_group,  page_invitation=invitations.page, page_request=requests.page) }}"
+                            class="btn btn-outline-dark">
+                            {{ page_num_group }}
+                        </a>
+                        {% endif %}
+                        {% else %}
+                        ...
+                        {% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('main.user', username=user.username, page_group=groups.next_num,  page_invitation=invitations.page, page_request=requests.page) }}"
+                            class="btn btn-outline-dark
+                                   {% if groups.page == groups.pages %}disabled{% endif %}">
+                            &raquo;
+                        </a>
+                    </div>
+                    <p class="text-right mt-3">
+                        Showing page {{ groups.page }} of {{ groups.pages }}
+                    </p>
                 </div>
             </td>
         </tr>
@@ -58,10 +94,46 @@
                                 <th scope="col">Actions</th>
                             </tr>
                         </thead>
-                        {% for invitation in current_user.invitations %}
+                        {% for invitation in invitations.items %}
                         {% include '_invitation.html' %}
                         {% endfor %}
                     </table>
+                    <!-- Pagination Links-->
+                    <div class="text-right">
+                        <a href="{{ url_for('main.user', username=user.username, page_group=groups.page, page_invitation=invitations.prev_num, page_request=requests.page) }}"
+                            class="btn btn-outline-dark
+                                                       {% if invitations.page == 1 %}disabled{% endif %}">
+                            &laquo;
+                        </a>
+                        <!-- Loop through the number of pages to display a link for each-->
+                        {% for page_num_invitation in invitations.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                        right_current=2) %}
+                        {% if page_num_invitation %}
+                        <!-- Check for the active page and set the link to "Active"-->
+                        {% if invitations.page == page_num_invitation %}
+                        <a href="{{ url_for('main.user', username=user.username, page_group=groups.page, page_invitation=page_num_invitation, page_request=requests.page) }}"
+                            class="btn btn-dark">
+                            {{ page_num_invitation }}
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('main.user', username=user.username, page_group=groups.page, page_invitation=page_num_invitation, page_request=requests.page) }}"
+                            class="btn btn-outline-dark">
+                            {{ page_num_invitation }}
+                        </a>
+                        {% endif %}
+                        {% else %}
+                        ...
+                        {% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('main.user',username=user.username,page_group=groups.page,  page_invitation=invitations.next_num, page_request=requests.page) }}"
+                            class="btn btn-outline-dark
+                                                       {% if invitations.page == invitations.pages %}disabled{% endif %}">
+                            &raquo;
+                        </a>
+                    </div>
+                    <p class="text-right mt-3">
+                        Showing page {{ invitations.page }} of {{ invitations.pages }}
+                    </p>
                 </div>
             </td>
         </tr>
@@ -81,15 +153,109 @@
                                 <th scope="col">Actions</th>
                             </tr>
                         </thead>
-                        {% for membership_request in current_user.membership_requests %}
+                        {% for membership_request in requests.items %}
                         {% include '_membership_request.html' %}
                         {% endfor %}
                     </table>
+                    <!-- Pagination Links-->
+                    <div class="text-right">
+                        <a href="{{ url_for('main.user',username=user.username, page_group=groups.page, page_invitation=invitations.page, page_request=requests.prev_num) }}"
+                            class="btn btn-outline-dark
+                                                                           {% if requests.page == 1 %}disabled{% endif %}">
+                            &laquo;
+                        </a>
+                        <!-- Loop through the number of pages to display a link for each-->
+                        {% for page_num_request in requests.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                        right_current=2) %}
+                        {% if page_num_request %}
+                        <!-- Check for the active page and set the link to "Active"-->
+                        {% if requests.page == page_num_requests %}
+                        <a href="{{ url_for('main.user',username=user.username, page_group=groups.page, page_invitation=invitations.page, page_request=page_num_request) }}"
+                            class="btn btn-dark">
+                            {{ page_num_request }}
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('main.user',username=user.username, page_group=groups.page, page_invitation=invitations.page, page_request=page_num_request) }}"
+                            class="btn btn-outline-dark">
+                            {{ page_num_request }}
+                        </a>
+                        {% endif %}
+                        {% else %}
+                        ...
+                        {% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('main.user',username=user.username, page_group=groups.page, page_invitation=invitations.page, page_request=requests.next_num) }}"
+                            class="btn btn-outline-dark
+                                                                           {% if requests.page == requests.pages %}disabled{% endif %}">
+                            &raquo;
+                        </a>
+                    </div>
+                    <p class="text-right mt-3">
+                        Showing page {{ requests.page }} of {{ requests.pages }}
+                    </p>
                 </div>
             </td>
         </tr>
         {% else %}
-
+        <tr>
+            <td colspan="2">
+                <div class="container md-6">
+                    <h2>You have following common groups with {{user.username}}:</h2>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">Group Name</th>
+                                <th scope="col">Group Avatar</th>
+                                <th scope="col">Group Description</th>
+                                <th scope="col">Group Owner Name</th>
+                                <th scope="col">Creation Date</th>
+                                <th scope="col">Members</th>
+                            </tr>
+                        </thead>
+                        {% for group in common_groups.items %}
+                        {% include '_group.html' %}
+                        {% endfor %}
+                    </table>
+                    <!-- Pagination Links-->
+                    <div class="text-right">
+                        <a href="{{ url_for('main.user', username=user.username, page_common_group=common_groups.prev_num) }}"
+                            class="btn btn-outline-dark
+                                           {% if common_groups.page == 1 %}disabled{% endif %}">
+                            &laquo;
+                        </a>
+                        <!-- Loop through the number of pages to display a link for each-->
+                        {% for page_num_common_group in common_groups.iter_pages(left_edge=1, right_edge=1,
+                        left_current=1,
+                        right_current=2) %}
+                        {% if page_num_common_group %}
+                        <!-- Check for the active page and set the link to "Active"-->
+                        {% if common_groups.page == page_num_common_group %}
+                        <a href="{{ url_for('main.user', username=user.username, page_common_group=page_num_common_group) }}"
+                            class="btn btn-dark">
+                            {{ page_num_common_group }}
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('main.user', username=user.username, page_common_group=page_num_common_group) }}"
+                            class="btn btn-outline-dark">
+                            {{ page_num_common_group }}
+                        </a>
+                        {% endif %}
+                        {% else %}
+                        ...
+                        {% endif %}
+                        {% endfor %}
+                        <a href="{{ url_for('main.user', username=user.username, page_common_group=common_groups.next_num) }}"
+                            class="btn btn-outline-dark
+                                           {% if common_groups.page == common_groups.pages %}disabled{% endif %}">
+                            &raquo;
+                        </a>
+                    </div>
+                    <p class="text-right mt-3">
+                        Showing page {{ common_groups.page }} of {{ common_groups.pages }}
+                    </p>
+                </div>
+            </td>
+        </tr>
         {% endif %}
     </table>
 

@@ -115,10 +115,46 @@
                             <th scope="col">User Date Added</th>
                         </tr>
                     </thead>
-                    {% for user in group.users%}
+                    {% for user in group_users.items%}
                     {% include '_user.html' %}
                     {% endfor %}
                 </table>
+                <!-- Pagination Links-->
+                <div class="text-right">
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user=group_users.prev_num) }}" class="btn btn-outline-dark
+                                                                   {% if group_users.page == 1 %}disabled{% endif %}">
+                        &laquo;
+                    </a>
+                    <!-- Loop through the number of pages to display a link for each-->
+                    {% for page_num_user in group_users.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                    right_current=2)
+                    %}
+                    {% if page_num_user %}
+                    <!-- Check for the active page and set the link to "Active"-->
+                    {% if group_users.page == page_num_user %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user=page_num_user) }}"
+                        class="btn btn-dark">
+                        {{ page_num_user }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user=page_num_user) }}"
+                        class="btn btn-outline-dark">
+                        {{ page_num_user }}
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    ...
+                    {% endif %}
+                    {% endfor %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user=group_users.next_num) }}"
+                        class="btn btn-outline-dark
+                                                                   {% if group_users.page == group_users.pages %}disabled{% endif %}">
+                        &raquo;
+                    </a>
+                </div>
+                <p class="text-right mt-3">
+                    Showing page {{ group_users.page }} of {{ group_users.pages }}
+                </p>
             </td>
         </tr>
         {% endif %}

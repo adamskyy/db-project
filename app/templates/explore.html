@@ -47,11 +47,13 @@
             {% if page_num_group %}
             <!-- Check for the active page and set the link to "Active"-->
             {% if groups.page == page_num_group %}
-            <a href="{{ url_for('main.explore', page_group=page_num_group) }}" class="btn btn-dark">
+            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=users.page) }}"
+                class="btn btn-dark">
                 {{ page_num_group }}
             </a>
             {% else %}
-            <a href="{{ url_for('main.explore', page_group=page_num_group) }}" class="btn btn-outline-dark">
+            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=users.page) }}"
+                class="btn btn-outline-dark">
                 {{ page_num_group }}
             </a>
             {% endif %}
@@ -59,7 +61,7 @@
             ...
             {% endif %}
             {% endfor %}
-            <a href="{{ url_for('main.explore', page_group=groups.next_num) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.next_num, page_user=users.page) }}" class="btn btn-outline-dark
                {% if groups.page == groups.pages %}disabled{% endif %}">
                 &raquo;
             </a>
@@ -102,7 +104,7 @@
         </div>
         <!-- Pagination Links-->
         <div class="text-right">
-            <a href="{{ url_for('main.explore', page_group=groups.prev_num, page_user=users.prev_num) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=users.prev_num) }}" class="btn btn-outline-dark
                        {% if users.page == 1 %}disabled{% endif %}">
                 &laquo;
             </a>
@@ -111,12 +113,12 @@
             {% if page_num_user %}
             <!-- Check for the active page and set the link to "Active"-->
             {% if users.page == page_num_user %}
-            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=page_num_user) }}"
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=page_num_user) }}"
                 class="btn btn-dark">
                 {{ page_num_user }}
             </a>
             {% else %}
-            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=page_num_user) }}"
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=page_num_user) }}"
                 class="btn btn-outline-dark">
                 {{ page_num_user }}
             </a>
@@ -125,7 +127,7 @@
             ...
             {% endif %}
             {% endfor %}
-            <a href="{{ url_for('main.explore', page_group=groups.next_num, page_user=users.next_num) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=users.next_num) }}" class="btn btn-outline-dark
                        {% if users.page == users.pages %}disabled{% endif %}">
                 &raquo;
             </a>

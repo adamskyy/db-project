@@ -35,10 +35,46 @@
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
-                    {% for user in group.users%}
+                    {% for user in group_users.items%}
                     {% include '_user.html' %}
                     {% endfor %}
                 </table>
+                <!-- Pagination Links-->
+                <div class="text-right">
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.prev_num, page_invitation=group_invitations.page, page_request=group_requests.page) }}"
+                        class="btn btn-outline-dark
+                                            {% if group_users.page == 1 %}disabled{% endif %}">
+                        &laquo;
+                    </a>
+                    <!-- Loop through the number of pages to display a link for each-->
+                    {% for page_num_user in group_users.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                    right_current=2) %}
+                    {% if page_num_user %}
+                    <!-- Check for the active page and set the link to "Active"-->
+                    {% if group_users.page == page_num_user %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_users = page_num_user, page_invitation=group_invitations.page, page_request=group_requests.page) }}"
+                        class="btn btn-dark">
+                        {{ page_num_user }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = page_num_user, page_invitation=group_invitations.page, page_request=group_requests.page) }}"
+                        class="btn btn-outline-dark">
+                        {{ page_num_user }}
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    ...
+                    {% endif %}
+                    {% endfor %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.prev_num, page_invitation=group_invitations.page, page_request=group_requests.page) }}"
+                        class="btn btn-outline-dark
+                            {% if group_users.page == group_users.pages %}disabled{% endif %}">
+                        &raquo;
+                    </a>
+                </div>
+                <p class="text-right mt-3">
+                    Showing page {{ group_users.page }} of {{ group_users.pages }}
+                </p>
             </td>
         </tr>
         <tr>
@@ -56,10 +92,46 @@
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
-                    {% for request in group.membership_requests %}
+                    {% for request in group_requests.items %}
                     {% include '_sent_request.html' %}
                     {% endfor %}
                 </table>
+                <!-- Pagination Links-->
+                <div class="text-right">
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.page, page_invitation=group_invitations.page, page_request=group_requests.prev_num) }}"
+                        class="btn btn-outline-dark
+                            {% if group_requests.page == 1 %}disabled{% endif %}">
+                        &laquo;
+                    </a>
+                    <!-- Loop through the number of pages to display a link for each-->
+                    {% for page_num_request in group_requests.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                    right_current=2) %}
+                    {% if page_num_request %}
+                    <!-- Check for the active page and set the link to "Active"-->
+                    {% if group_requests.page == page_num_request %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_users = group_users.page, page_invitation=group_invitations.page, page_request=page_num_request) }}"
+                        class="btn btn-dark">
+                        {{ page_num_request }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.page, page_invitation=group_invitations.page, page_request=page_num_request) }}"
+                        class="btn btn-outline-dark">
+                        {{ page_num_request }}
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    ...
+                    {% endif %}
+                    {% endfor %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.page, page_invitation=group_invitations.page, page_request=group_requests.prev_num) }}"
+                        class="btn btn-outline-dark
+                            {% if group_requests.page == group_requests.pages %}disabled{% endif %}">
+                        &raquo;
+                    </a>
+                </div>
+                <p class="text-right mt-3">
+                    Showing page {{ group_requests.page }} of {{ group_requests.pages }}
+                </p>
             </td>
         </tr>
         <tr>
@@ -77,10 +149,47 @@
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
-                    {% for invitation in group.invitations %}
+                    {% for invitation in group_invitations.items %}
                     {% include '_sent_invitation.html' %}
                     {% endfor %}
                 </table>
+                <!-- Pagination Links-->
+                <div class="text-right">
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.page, page_invitation=group_invitations.pre_num, page_request=group_requests.page) }}"
+                        class="btn btn-outline-dark
+                                            {% if group_invitations.page == 1 %}disabled{% endif %}">
+                        &laquo;
+                    </a>
+                    <!-- Loop through the number of pages to display a link for each-->
+                    {% for page_num_invitation in group_invitations.iter_pages(left_edge=1, right_edge=1,
+                    left_current=1,
+                    right_current=2) %}
+                    {% if page_num_invitation %}
+                    <!-- Check for the active page and set the link to "Active"-->
+                    {% if group_invitations.page == page_num_invitation %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_users = group_users.page, page_invitation=page_num_invitation, page_request=group_requests.page) }}"
+                        class="btn btn-dark">
+                        {{ page_num_invitation }}
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.page, page_invitation=page_num_invitation, page_request=group_requests.page) }}"
+                        class="btn btn-outline-dark">
+                        {{ page_num_invitation }}
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    ...
+                    {% endif %}
+                    {% endfor %}
+                    <a href="{{ url_for('main.group', groupname=group.name, page_user = group_users.page, page_invitation=group_invitations.next_num, page_request=group_requests.page) }}"
+                        class="btn btn-outline-dark
+                                            {% if group_invitations.page == group_invitations.pages %}disabled{% endif %}">
+                        &raquo;
+                    </a>
+                </div>
+                <p class="text-right mt-3">
+                    Showing page {{ group_requests.page }} of {{ group_requests.pages }}
+                </p>
             </td>
         </tr>
     </table>
