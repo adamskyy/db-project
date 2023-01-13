@@ -16,6 +16,9 @@
                 <form action="{{ url_for('main.quit_from_group', group_id=group.id) }}" method="POST">
                     <button type="submit" class="btn btn-primary mr-3">Leave the group</button>
                 </form>
+                <form action="{{ url_for('main.create_expense', group_id=group.id) }}" method="GET">
+                    <button type="submit" class="btn btn-primary mr-3">Create expense</button>
+                </form>
             </td>
             {% endif %}
         </tr>

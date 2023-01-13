@@ -3,8 +3,8 @@ from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import current_user, login_required
 from datetime import datetime
 from app import db
-from app.models import User, Group, Invitation, MembershipRequest, GroupMember
-from app.main.forms import EditProfileForm, CreateGroup, EditGroup
+from app.models import User, Group, Invitation, MembershipRequest, GroupMember, Expense
+from app.main.forms import EditProfileForm, CreateGroup, EditGroup, CreateExpense
 
 
 @bp.before_request
@@ -267,3 +267,19 @@ def explore():
     users = User.query.paginate(page=page_user, per_page=2)
     return render_template('explore.html', title='index', groups=groups, users=users)
 
+
+@bp.route('/create_expense/<group_id>', methods=['GET', 'POST'])
+@login_required
+def create_expense(group_id):
+    group = Group.query.filter_by(id=group_id).first_or_404()
+    form = CreateExpense(group_id, current_user.id)
+    if form.validate_on_submit():
+        expense = Expense(title=form.title.data, amount=form.amount.data, description=form.description.data, lender_id=current_user.id, group_id=group_id, is_paid=False)
+        db.session.add(expense)
+        expense.add_members(form.members.data)
+        db.session.commit()
+        expense.set_amount_borrowed()
+        db.session.commit()
+        flash(f'Expense - {expense.title} has been created.', 'success')
+        return redirect(url_for('main.index'))
+    return render_template('create_expense.html', title='Create expense', form=form, groupname=group.name)

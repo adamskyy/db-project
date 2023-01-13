@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectMultipleField
-from wtforms.validators import DataRequired, Length, ValidationError
-from app.models import User, Group, Invitation
+from wtforms import StringField, TextAreaField, SubmitField, SelectMultipleField, SelectField, FloatField
+from wtforms.validators import DataRequired, Length, ValidationError, NumberRange
+from app.models import User, Group
 
 class EditProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -58,6 +58,17 @@ class EditGroup(FlaskForm):
                 raise ValidationError('Please use a different groupname.')
 
 
+class CreateExpense(FlaskForm):
+    title = StringField('Expense title', validators=[DataRequired()])
+    amount = FloatField('Amount of money paid', validators=[DataRequired(), NumberRange(min=1, message="The value should be minimal 1$.")])
+    description = StringField('Expense description', validators=[DataRequired(), Length(min=0, max=140)])
+    members = SelectMultipleField('Split with', coerce=int)
+    submit = SubmitField('Create')
 
-
+    def __init__(self, group_id, self_id, *args, **kwargs):
+        super(CreateExpense, self).__init__(*args, **kwargs)
+        group_members = Group.query.filter_by(id=group_id).first().users
+        list_of_ids = [user.id for user in group_members if user.id != self_id]
+        print(list_of_ids)
+        self.members.choices = [(user.id, user.username) for user in User.query.filter(User.id.in_(list_of_ids))]
 

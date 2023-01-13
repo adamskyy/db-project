@@ -143,3 +143,50 @@ class Invitation(db.Model):
 
     def cancel_invitation(self):
         self.status = 'cancelled'
+
+
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+    amount = db.Column(db.Float)
+    description = db.Column(db.String)
+    date = db.Column(db.DateTime)
+    lender_id = db.Column(db.Integer, db.ForeignKey("group_member.id",ondelete='CASCADE'), nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey("group.id",ondelete='CASCADE'), nullable=False)
+    is_paid = db.Column(db.Boolean, default=False)
+    added_on = db.Column(db.DateTime, default=datetime.utcnow)
+    members = db.relationship("GroupMember", secondary="expense_member", backref=db.backref("expenses", lazy=True))
+    lender = db.relationship("GroupMember", foreign_keys=[lender_id], backref=db.backref("lended_expenses", lazy=True))
+    group = db.relationship("Group", foreign_keys=[group_id], backref=db.backref("expenses", lazy=True))
+
+    def add_members(self, members_list_ids):
+        members_list = GroupMember.query.filter(GroupMember.user_id.in_(members_list_ids), GroupMember.group_id == self.group_id).all()
+        x = [y.id for y in members_list]
+        for member in members_list:
+            self.members.append(member)
+        db.session.commit()
+
+    def set_amount_borrowed(self):
+        borrowed = self.amount / (len(self.members) + 1)
+        group_members_ids = [group_member.id for group_member in self.members]
+        members_list = ExpenseMember.query.filter(ExpenseMember.group_member_id.in_(group_members_ids), GroupMember.group_id == self.group_id).all()
+        for member in members_list:
+            member.amount_borrowed = borrowed
+        db.session.commit()
+
+
+class ExpenseMember(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    expense_id = db.Column(db.Integer, db.ForeignKey("expense.id", ondelete='CASCADE'))
+    group_member_id = db.Column(db.Integer, db.ForeignKey("group_member.id", ondelete='CASCADE'))
+    has_paid = db.Column(db.Boolean, default=False)
+    amount_borrowed = db.Column(db.Float)
+
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    expense_id = db.Column(db.Integer, db.ForeignKey("expense.id", ondelete='CASCADE'))
+    expense_member_id = db.Column(db.Integer, db.ForeignKey("expense_member.id", ondelete='CASCADE'))
+    amount = db.Column(db.Float)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    expense = db.relationship("Expense", foreign_keys=[expense_id], backref=db.backref("transactions", lazy=True))
+    expense_member = db.relationship("ExpenseMember", foreign_keys=[expense_member_id], backref=db.backref("member_transactions", lazy=True))
