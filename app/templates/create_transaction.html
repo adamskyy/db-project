@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+<div class="container">
+    <form action="" method="post" class="bg-white p-5">
+        <legend class="border-bottom">Create transaction to settle up exepense called <b>{{ expense.title }}:</b>
+        </legend>
+        <br>
+        {{ form.hidden_tag() }}
+        <div class="form-group my-2">
+            <p>You've already paid {{ expense.get_amount_paid(current_user) }}$ out of {{
+                expense.get_amount_needs_to_seddle(current_user) }}$.</p>
+            <p>You still need to pay {{ expense.get_amount_needs_to_seddle(current_user) -
+                expense.get_amount_paid(current_user) }}$.</p>
+            {{ form.amount.label(class="form-label") }}
+            {% if form.amount.errors %}
+            {{ form.amount(class="form-control is-invalid") }}
+            <div class="invalid-feedback">
+                {% for error in form.amount.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            {{ form.amount(class="form-control") }}
+            {% endif %}
+        </div>
+        <div class="form-group my-2">
+            {{ form.note.label(class="form-label") }}
+            {% if form.note.errors %}
+            {{ form.note(class="form-control is-invalid", cols=50, rows=4) }}
+            <div class="invalid-feedback">
+                {% for error in form.note.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            {{ form.note(class="form-control", cols=50, rows=4) }}
+            {% endif %}
+        </div>
+        <div class="form-group my-2">
+            {{ form.date.label(class="form-label") }}
+            {% if form.date.errors %}
+            {{ form.date(class="form-control is-invalid datepicker", type="date") }}
+            <div class="invalid-feedback">
+                {% for error in form.date.errors %}
+                <span style="color: red;">[{{ error }}]</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            {{ form.date(class="form-control datepicker", type="date") }}
+            {% endif %}
+        </div>
+        <div class="form-group my-2">
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}

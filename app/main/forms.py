@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectMultipleField, SelectField, FloatField
+from wtforms import StringField, TextAreaField, SubmitField, SelectMultipleField, SelectField, FloatField, DateField
 from wtforms.validators import DataRequired, Length, ValidationError, NumberRange
-from app.models import User, Group
+from app.models import User, Group, GroupMember, Expense
 
 class EditProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -67,8 +67,25 @@ class CreateExpense(FlaskForm):
 
     def __init__(self, group_id, self_id, *args, **kwargs):
         super(CreateExpense, self).__init__(*args, **kwargs)
-        group_members = Group.query.filter_by(id=group_id).first().users
-        list_of_ids = [user.id for user in group_members if user.id != self_id]
-        print(list_of_ids)
-        self.members.choices = [(user.id, user.username) for user in User.query.filter(User.id.in_(list_of_ids))]
+        self.members.choices = [(user.id, user.username) for member in GroupMember.query.filter(GroupMember.group_id == group_id, GroupMember.user_id != self_id).all() for user in User.query.filter_by(id=member.user_id).all()]
 
+
+class CreateTransaction(FlaskForm):
+    amount = FloatField('Register transaction with amount:', validators=[DataRequired(), NumberRange(min=1, message="The value should be minimal 1$.")])
+    note = StringField('Transaction description', validators=[DataRequired(), Length(min=0, max=140)])
+    date = DateField('Paid on', validators=[DataRequired()])
+    submit = SubmitField('Register transaction')
+    already_paid = 0
+    need_to_pay = 0
+
+    def __init__(self, expense_id, user, *args, **kwargs):
+        super(CreateTransaction, self).__init__(*args, **kwargs)
+        expense = Expense.query.filter_by(id=expense_id).first_or_404()
+        self.already_paid = expense.get_amount_paid(user)
+        self.need_to_pay = expense.get_amount_needs_to_seddle(user)
+
+
+    def validate_amount(self, amount):
+        print(self.need_to_pay - self.already_paid)
+        if amount.data > (self.need_to_pay - self.already_paid):
+            raise ValidationError('You paid too much!')

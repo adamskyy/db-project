@@ -13,7 +13,7 @@
         {% endblock %}
     </title>
   </head>
-  <body>
+  <body class="bg-light">
     {% include 'navbar.html' %}
     {% block content %}
         <div class="container">
@@ -27,7 +27,8 @@
             {% endwith %}
 
             {# application content needs to be provided in the app_content block #}
-            {% block app_content %}{% endblock %}
+            {% block app_content %}
+            {% endblock %}
         </div>
     {% endblock %}
 

@@ -3,8 +3,8 @@ from flask import render_template, flash, redirect, url_for, request, abort
 from flask_login import current_user, login_required
 from datetime import datetime
 from app import db
-from app.models import User, Group, Invitation, MembershipRequest, GroupMember, Expense
-from app.main.forms import EditProfileForm, CreateGroup, EditGroup, CreateExpense
+from app.models import User, Group, Invitation, MembershipRequest, GroupMember, Expense, ExpenseMember, Transaction
+from app.main.forms import EditProfileForm, CreateGroup, EditGroup, CreateExpense, CreateTransaction
 
 
 @bp.before_request
@@ -17,10 +17,13 @@ def before_request():
 @bp.route('/index', methods=['GET'])
 def index():
     if current_user.is_authenticated:
-        page = request.args.get('page', 1, type=int)
-        groups_id = [group.id for group in current_user.groups]
-        groups = Group.query.filter(Group.id.in_(groups_id)).paginate(page=page, per_page=3)
-        return render_template('index.html', title='index', groups=groups)
+        page_group = request.args.get('page_group', 1, type=int)
+        page_debt = request.args.get('page_debt', 1, type=int)
+        page_expense = request.args.get('page_expense', 1, type=int)
+        groups = Group.query.filter(Group.id.in_([g.id for g in current_user.groups])).paginate(page=page_group, per_page=3)
+        debts = current_user.get_user_pending_debts().paginate(page=page_debt, per_page=2)
+        expenses = current_user.get_user_expenses().paginate(page=page_expense, per_page=2)
+        return render_template('index.html', title='index', groups=groups, debts=debts, expenses=expenses)
 
     return render_template('index.html', title='index')
 
@@ -97,6 +100,8 @@ def decline_invitation(invitation_id):
 @login_required
 def group(groupname):
     group = Group.query.filter_by(name=groupname).first_or_404()
+    page_expense = request.args.get('page_expense', 1, type=int)
+    group_expenses = Expense.query.filter(Expense.group_id == group.id).paginate(page=page_expense, per_page=1)
     if current_user.id == group.owner.id:
         page_user = request.args.get('page_user', 1, type=int)
         page_request = request.args.get('page_request', 1, type=int)
@@ -105,11 +110,11 @@ def group(groupname):
         group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=1)
         group_requests = MembershipRequest.query.filter_by(group_id=group.id).paginate(page=page_request, per_page=1)
         group_invitations = Invitation.query.filter_by(group_id=group.id).paginate(page=page_invitation, per_page=1)
-        return render_template('group_admin.html', title='Group page', group=group, group_requests=group_requests, group_users=group_users, group_invitations=group_invitations)
+        return render_template('group_admin.html', title='Group page', group=group, group_requests=group_requests, group_users=group_users, group_invitations=group_invitations, group_expenses=group_expenses)
     page_user = request.args.get('page_user', 1, type=int)
     users_id = [user.id for user in group.users]
     group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=1)
-    return render_template('group.html', title='Group page', group=group, group_users=group_users)
+    return render_template('group.html', title='Group page', group=group, group_users=group_users, group_expenses=group_expenses)
 
 
 @bp.route('/remove_user/<group_id>/<user_id>', methods=['GET', 'POST'])
@@ -274,7 +279,8 @@ def create_expense(group_id):
     group = Group.query.filter_by(id=group_id).first_or_404()
     form = CreateExpense(group_id, current_user.id)
     if form.validate_on_submit():
-        expense = Expense(title=form.title.data, amount=form.amount.data, description=form.description.data, lender_id=current_user.id, group_id=group_id, is_paid=False)
+        lender = GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first_or_404()
+        expense = Expense(title=form.title.data, amount=form.amount.data, description=form.description.data, lender_id=lender.id, group_id=group_id, is_paid=False)
         db.session.add(expense)
         expense.add_members(form.members.data)
         db.session.commit()
@@ -283,3 +289,31 @@ def create_expense(group_id):
         flash(f'Expense - {expense.title} has been created.', 'success')
         return redirect(url_for('main.index'))
     return render_template('create_expense.html', title='Create expense', form=form, groupname=group.name)
+
+
+@bp.route('/remove_expense/<expense_id>', methods=['POST'])
+@login_required
+def remove_expense(expense_id):
+    Expense.query.filter_by(id=expense_id).delete()
+    db.session.commit()
+    return redirect(url_for('main.index'))
+
+@bp.route('/create_transaction/<expense_id>', methods=['GET', 'POST'])
+@login_required
+def create_transaction(expense_id):
+    expense = Expense.query.filter_by(id=expense_id).first_or_404()
+    form = CreateTransaction(expense_id, user=current_user)
+    user_as_expense_member = (
+            db.session.query(ExpenseMember)
+            .join(GroupMember)
+            .filter(GroupMember.user_id == current_user.id, ExpenseMember.expense_id == expense_id)
+            .first()
+        )
+    if form.validate_on_submit():
+        print(form.date.data)
+        transaction = Transaction(expense_id=expense_id, expense_member_id=user_as_expense_member.id, amount=form.amount.data, note=form.note.data, date=form.date.data)
+        db.session.add(transaction)
+        db.session.commit()
+        flash(f'Transaction for {expense.title} has been registered.', 'success')
+        return redirect(url_for('main.index'))
+    return render_template('create_transaction.html', title='Create transaction', form=form, expense=expense)

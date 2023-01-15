@@ -4,19 +4,22 @@
 <div class="container">
     {% if current_user.is_authenticated %}
     <div class="row">
-        <div class="col-4">
+        <div class="col-2">
             <h4>Available actions:</h4>
             <br>
             <div class="btn-group-vertical">
                 <form action="{{ url_for('main.create_group') }}" method="GET">
-                    <button type="submit" class="btn btn-primary my-3">Create a new group</button>
+                    <button type="submit" class="btn-lg btn-outline-primary my-3">Create a new group</button>
                 </form>
                 <form action="{{ url_for('main.explore') }}" method="GET">
-                    <button type="submit" class="btn btn-primary my-3">Explore other groups/users</button>
+                    <button type="submit" class="btn-lg btn-outline-primary my-3">Explore other groups/users</button>
+                </form>
+                <form action="{{ url_for('main.explore') }}" method="GET">
+                    <button type="submit" class="btn-lg btn-outline-primary my-3">History of your transactions</button>
                 </form>
             </div>
         </div>
-        <div class="col-4">
+        <div class="col-2">
             <h4>Explore your groups:</h4>
             <br>
             <div class="card-columns">
@@ -35,28 +38,33 @@
                 {% endfor %}
             </div>
             <div class="text-right">
-                <a href="{{ url_for('main.index', page=groups.prev_num) }}" class="btn btn-outline-dark
+                <a href="{{ url_for('main.index', page_group=groups.prev_num, page_debt=debts.page, page_expense=expenses.page) }}"
+                    class="btn btn-outline-dark
                {% if groups.page == 1 %}disabled{% endif %}">
                     &laquo;
                 </a>
                 <!-- Loop through the number of pages to display a link for each-->
-                {% for page_num in groups.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                {% if page_num %}
+                {% for page_num_group in groups.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2)
+                %}
+                {% if page_num_group %}
                 <!-- Check for the active page and set the link to "Active"-->
-                {% if groups.page == page_num %}
-                <a href="{{ url_for('main.index', page=page_num) }}" class="btn btn-dark">
-                    {{ page_num }}
+                {% if groups.page == page_num_group %}
+                <a href="{{ url_for('main.index', page_group=page_num_group, page_debt=debts.page, page_expense=expenses.page) }}"
+                    class="btn btn-dark">
+                    {{ page_num_group }}
                 </a>
                 {% else %}
-                <a href="{{ url_for('main.index', page=page_num) }}" class="btn btn-outline-dark">
-                    {{ page_num }}
+                <a href="{{ url_for('main.index', page_group=page_num_group, page_debt=debts.page, page_expense=expenses.page) }}"
+                    class="btn btn-outline-dark">
+                    {{ page_num_group }}
                 </a>
                 {% endif %}
                 {% else %}
                 ...
                 {% endif %}
                 {% endfor %}
-                <a href="{{ url_for('main.index', page=groups.next_num) }}" class="btn btn-outline-dark
+                <a href="{{ url_for('main.index', page_group=groups.next_num, page_debt=debts.page, page_expense=expenses.page) }}"
+                    class="btn btn-outline-dark
                {% if groups.page == groups.pages %}disabled{% endif %}">
                     &raquo;
                 </a>
@@ -65,8 +73,192 @@
                 Showing page {{ groups.page }} of {{ groups.pages }}
             </p>
         </div>
-        <div class="col-4">
-            <h4>This column can be used for some accout balance and creating payments:</h4>
+        <div class="col-8">
+            <div class="card">
+                <div class="card-header">
+                    Your Balance
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-4">
+                            <h6>Total Balance:</h6>
+                            <p class="card-text text-muted">${{ current_user.balance }}</p>
+                        </div>
+                        <div class="col-4">
+                            <h6>You Owe:</h6>
+                            <p class="card-text text-danger">${{ current_user.get_amount_of_user_debts() }}</p>
+                        </div>
+                        <div class="col-4">
+                            <h6>You are Owed:</h6>
+                            <p class="card-text text-success">${{ current_user.get_amount_of_payed_expenses() }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <div class="card">
+                <div class="card-header">
+                    Your Pending Debts
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col-2">Date Added</th>
+                                <th scope="col-2">Expense Title</th>
+                                <th scope="col-2">Who Paid</th>
+                                <th scope="col-2">Group</th>
+                                <th scope="col-2">Amount Paid</th>
+                                <th scope="col-2">Amount You Settle</th>
+                                <th scope="col-2">Amount You Owe</th>
+                                <th scope="col-2">Need to pay</th>
+                                <th scope="col-2">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for debt in debts.items %}
+                            <tr>
+                                <td>{{ debt.added_on }}</td>
+                                <td>{{ debt.title }}</td>
+                                <td>{{ debt.get_group_name() }}</td>
+                                <td>{{ debt.get_lender_name() }}</td>
+                                <td>${{ debt.amount }}</td>
+                                <td>${{ debt.get_amount_paid(current_user) }}</td>
+                                <td>${{ debt.get_amount_needs_to_seddle(current_user) }}</td>
+                                <td>${{ debt.get_amount_needs_to_seddle(current_user) -
+                                    debt.get_amount_paid(current_user) }}</td>
+                                <td>
+                                    <form action="{{ url_for('main.create_transaction', expense_id=debt.id) }}"
+                                        method="GET">
+                                        <button type="submit" class="btn-lg btn-outline-primary my-3">Settle up</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Pagination Links-->
+            <div class="text-right mt-1">
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=debts.prev_num, page_expense=expenses.page) }}"
+                    class="btn btn-outline-dark
+               {% if debts.page == 1 %}disabled{% endif %}">
+                    &laquo;
+                </a>
+                <!-- Loop through the number of pages to display a link for each-->
+                {% for page_num_debt in debts.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                right_current=2)
+                %}
+                {% if page_num_debt %}
+                <!-- Check for the active page and set the link to "Active"-->
+                {% if debts.page == page_num_debt %}
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=page_num_debt, page_expense=expenses.page) }}"
+                    class="btn btn-dark">
+                    {{ page_num_debt }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=page_num_debt, page_expense=expenses.page)  }}"
+                    class="btn btn-outline-dark">
+                    {{ page_num_debt }}
+                </a>
+                {% endif %}
+                {% else %}
+                ...
+                {% endif %}
+                {% endfor %}
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=debts.next_num, page_expense=expenses.page) }}"
+                    class="btn btn-outline-dark
+               {% if debts.page == debts.pages %}disabled{% endif %}">
+                    &raquo;
+                </a>
+            </div>
+            <p class="text-right mt-1">
+                Showing page {{ debts.page }} of {{ debts.pages }}
+            </p>
+            <div class="card">
+                <div class="card-header">
+                    People Still Owe You
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date Added</th>
+                                <th scope="col">Expense Title</th>
+                                <th scope="col">Group</th>
+                                <th scope="col">Amount Paid</th>
+                                <th scope="col">Amount Owed</th>
+                                <th scope="col">People</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses.items %}
+                            <tr>
+                                <td>{{ expense.added_on }}</td>
+                                <td>{{ expense.title }}</td>
+                                <td>{{ expense.get_group_name() }}</td>
+                                <td>${{ expense.amount }}</td>
+                                <td>${{ expense.get_amount_owed() }}
+                                </td>
+                                <td>
+                                    {% for name in expense.get_member_names() %}
+                                    {{ name }}
+                                    {% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('main.remove_expense', expense_id=expense.id) }}"
+                                        method="POST">
+                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Pagination Links-->
+            <div class="text-right mt-1">
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=debts.page, page_expense=expenses.prev_num) }}"
+                    class="btn btn-outline-dark
+                           {% if expenses.page == 1 %}disabled{% endif %}">
+                    &laquo;
+                </a>
+                <!-- Loop through the number of pages to display a link for each-->
+                {% for page_num_expense in expenses.iter_pages(left_edge=1, right_edge=1, left_current=1,
+                right_current=2)
+                %}
+                {% if page_num_expense %}
+                <!-- Check for the active page and set the link to "Active"-->
+                {% if expenses.page == page_num_expense %}
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=debts.page, page_expense=page_num_expense) }}"
+                    class="btn btn-dark">
+                    {{ page_num_expense }}
+                </a>
+                {% else %}
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=debts.page, page_expense=page_num_expense)  }}"
+                    class="btn btn-outline-dark">
+                    {{ page_num_expense }}
+                </a>
+                {% endif %}
+                {% else %}
+                ...
+                {% endif %}
+                {% endfor %}
+                <a href="{{ url_for('main.index', page_group=groups.page, page_debt=debts.page, page_expense=expenses.next_num) }}"
+                    class="btn btn-outline-dark
+                           {% if expenses.page == expenses.pages %}disabled{% endif %}">
+                    &raquo;
+                </a>
+            </div>
+            <p class="text-right mt-1">
+                Showing page {{ expenses.page }} of {{ expenses.pages }}
+            </p>
+
         </div>
     </div>
     {% endif %}
