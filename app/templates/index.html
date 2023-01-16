@@ -8,15 +8,24 @@
             <h4>Available actions:</h4>
             <br>
             <div class="btn-group-vertical">
+                {% if current_user.is_admin == False %}
                 <form action="{{ url_for('main.create_group') }}" method="GET">
                     <button type="submit" class="btn-lg btn-outline-primary my-3">Create a new group</button>
                 </form>
+                {% endif %}
                 <form action="{{ url_for('main.explore') }}" method="GET">
                     <button type="submit" class="btn-lg btn-outline-primary my-3">Explore other groups/users</button>
                 </form>
-                <form action="{{ url_for('main.explore') }}" method="GET">
+                {% if current_user.is_admin == False %}
+                <form action="{{ url_for('main.transaction_history') }}" method="GET">
                     <button type="submit" class="btn-lg btn-outline-primary my-3">History of your transactions</button>
                 </form>
+                {% else %}
+                <form action="{{ url_for('main.transaction_expenses_history') }}" method="GET">
+                    <button type="submit" class="btn-lg btn-outline-primary my-3">History transactions and
+                        expenses</button>
+                </form>
+                {% endif %}
             </div>
         </div>
         <div class="col-2">
@@ -82,15 +91,16 @@
                     <div class="row">
                         <div class="col-4">
                             <h6>Total Balance:</h6>
-                            <p class="card-text text-muted">${{ current_user.balance }}</p>
+                            <p class="card-text text-muted">${{ (-1) * current_user.get_amount_of_payed_expenses() +
+                                current_user.get_amount_of_user_debts() }}</p>
                         </div>
                         <div class="col-4">
                             <h6>You Owe:</h6>
-                            <p class="card-text text-danger">${{ current_user.get_amount_of_user_debts() }}</p>
+                            <p class="card-text text-success">${{ current_user.get_amount_of_user_debts() }}</p>
                         </div>
                         <div class="col-4">
                             <h6>You are Owed:</h6>
-                            <p class="card-text text-success">${{ current_user.get_amount_of_payed_expenses() }}
+                            <p class="card-text text-danger">${{ current_user.get_amount_of_payed_expenses() }}
                             </p>
                         </div>
                     </div>

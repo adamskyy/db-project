@@ -23,15 +23,14 @@ def index():
         groups = Group.query.filter(Group.id.in_([g.id for g in current_user.groups])).paginate(page=page_group, per_page=3)
         debts = current_user.get_user_pending_debts().paginate(page=page_debt, per_page=2)
         expenses = current_user.get_user_expenses().paginate(page=page_expense, per_page=2)
-        return render_template('index.html', title='index', groups=groups, debts=debts, expenses=expenses)
-
-    return render_template('index.html', title='index')
+        return render_template('index.html', title='Main page', groups=groups, debts=debts, expenses=expenses)
+    return render_template('index.html', title='Main page')
 
 @bp.route('/user/<username>', methods=['GET'])
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    if current_user.username == username:
+    if current_user.username == username or current_user.is_admin == 1:
         page_group = request.args.get('page_group', 1, type=int)
         page_invitation = request.args.get('page_invitation', 1, type=int)
         page_request = request.args.get('page_request', 1, type=int)
@@ -102,7 +101,7 @@ def group(groupname):
     group = Group.query.filter_by(name=groupname).first_or_404()
     page_expense = request.args.get('page_expense', 1, type=int)
     group_expenses = Expense.query.filter(Expense.group_id == group.id).paginate(page=page_expense, per_page=1)
-    if current_user.id == group.owner.id:
+    if current_user.id == group.owner.id or current_user.is_admin:
         page_user = request.args.get('page_user', 1, type=int)
         page_request = request.args.get('page_request', 1, type=int)
         page_invitation = request.args.get('page_invitation', 1, type=int)
@@ -125,7 +124,7 @@ def remove_user(group_id, user_id):
     prev_Invitation = Invitation.query.filter_by(group_id=group_id, user_id=current_user.id).first()
     prev_Memb_requests = MembershipRequest.query.filter_by(group_id=group_id, user_id=current_user.id).first()
     # check if current user is admin of the group
-    if current_user.id == group.owner.id:
+    if current_user.id == group.owner.id or current_user.is_admin == True:
         if prev_Invitation is not None:
             db.session.delete(prev_Invitation)
         if prev_Memb_requests is not None:
@@ -164,6 +163,7 @@ def request_membership(group_id):
     db.session.add(membershipRequest)
     db.session.commit()
     group = Group.query.filter_by(id=group_id).first_or_404()
+    flash('You have requested to join that group!', 'success')
     return redirect(url_for('main.group', groupname=group.name))
 
 
@@ -174,6 +174,7 @@ def cancel_membership_request(request_id):
     membershipRequest.status = 'cancelled'
     db.session.commit()
     group = Group.query.filter_by(id=membershipRequest.group_id).first_or_404()
+    flash('You have cancelled your request to join that group!', 'danger')
     return redirect(url_for('main.group', groupname=group.name))
 
 @bp.route('/discard_membership_request/<request_id>', methods=['POST'])
@@ -183,6 +184,7 @@ def discard_membership_request(request_id):
     group_name = Group.query.filter_by(id=membershipRequest.group_id).first_or_404().name
     db.session.delete(membershipRequest)
     db.session.commit()
+    flash('You have removed your request to join that group!', 'danger')
     return redirect(url_for('main.group', groupname=group_name))
 
 @bp.route('/quit_from_group/<group_id>', methods=['POST'])
@@ -198,6 +200,7 @@ def quit_from_group(group_id):
     if prev_Memb_requests is not None:
         db.session.delete(prev_Memb_requests)
     db.session.commit()
+    flash('You have removed from that group!', 'danger')
     return redirect(url_for('main.group', groupname=group_name))
 
 @bp.route('/cancel_invitation/<invitation_id>', methods=['POST'])
@@ -206,6 +209,7 @@ def cancel_invitation(invitation_id):
     invitation = Invitation.query.filter_by(id=invitation_id).first_or_404()
     invitation.cancel_invitation()
     db.session.commit()
+    flash('Invitation cancelled!', 'danger')
     return redirect(url_for('main.group', groupname=invitation.group.name))
 
 
@@ -216,6 +220,7 @@ def remove_invitation(invitation_id):
     groupname = invitation.group.name
     db.session.delete(invitation)
     db.session.commit()
+    flash('Invitation removed!', 'danger')
     return redirect(url_for('main.group', groupname=groupname))
 
 
@@ -225,6 +230,7 @@ def accept_request(request_id):
     request = MembershipRequest.query.filter_by(id=request_id).first_or_404()
     request.accept_request(request.user)
     db.session.commit()
+    flash('Request accepted!', 'success')
     return redirect(url_for('main.group', groupname=request.group.name))
 
 
@@ -234,17 +240,19 @@ def decline_request(request_id):
     request = MembershipRequest.query.filter_by(id=request_id).first_or_404()
     request.decline_request(request.user)
     db.session.commit()
+    flash('Request declined!', 'danger')
     return redirect(url_for('main.group', groupname=request.group.name))
 
 
-@bp.route('/quit/<group_id>', methods=['POST'])
-@login_required
-def quit_group(group_id):
-    groupMember = GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first_or_404()
-    group_name = Group.query.filter_by(id=group_id).first_or_404().name
-    db.session.delete(groupMember)
-    db.session.commit()
-    return redirect(url_for('main.group', groupname=group_name))
+# @bp.route('/quit/<group_id>', methods=['POST'])
+# @login_required
+# def quit_group(group_id):
+#     groupMember = GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first_or_404()
+#     group_name = Group.query.filter_by(id=group_id).first_or_404().name
+#     db.session.delete(groupMember)
+#     db.session.commit()
+#     flash('Request declined!', 'danger')
+#     return redirect(url_for('main.group', groupname=group_name))
 
 @bp.route('/delete_group/<group_id>', methods=['POST'])
 @login_required
@@ -252,6 +260,7 @@ def delete_group(group_id):
     group = Group.query.filter_by(id=group_id).first_or_404()
     db.session.delete(group)
     db.session.commit()
+    flash('Group removed!', 'danger')
     return redirect(url_for('main.index'))
 
 
@@ -261,6 +270,7 @@ def delete_account(user_id):
     user = User.query.filter_by(id=user_id).first_or_404()
     db.session.delete(user)
     db.session.commit()
+    flash('Account deleted!', 'danger')
     return redirect(url_for('auth.logout'))
 
 @bp.route('/explore', methods=['GET'])
@@ -268,9 +278,11 @@ def delete_account(user_id):
 def explore():
     page_group = request.args.get('page_group', 1, type=int)
     page_user = request.args.get('page_user', 1, type=int)
-    groups = Group.query.paginate(page=page_group, per_page=2)
-    users = User.query.paginate(page=page_user, per_page=2)
-    return render_template('explore.html', title='index', groups=groups, users=users)
+    user_filter = request.args.get('user_filter', "", type=str)
+    group_filter = request.args.get('group_filter', "", type=str)
+    groups = Group.query.filter(Group.name.like(f"%{group_filter}%")).paginate(page=page_group, per_page=2)
+    users = User.query.filter(User.username.like(f"%{user_filter}%"), User.is_admin == False).paginate(page=page_user, per_page=2)
+    return render_template('explore.html', title='Explore', groups=groups, users=users, group_filter=group_filter, user_filter=user_filter)
 
 
 @bp.route('/create_expense/<group_id>', methods=['GET', 'POST'])
@@ -296,6 +308,7 @@ def create_expense(group_id):
 def remove_expense(expense_id):
     Expense.query.filter_by(id=expense_id).delete()
     db.session.commit()
+    flash(f'Expense has been deleted!', 'success')
     return redirect(url_for('main.index'))
 
 @bp.route('/create_transaction/<expense_id>', methods=['GET', 'POST'])
@@ -310,10 +323,41 @@ def create_transaction(expense_id):
             .first()
         )
     if form.validate_on_submit():
-        print(form.date.data)
         transaction = Transaction(expense_id=expense_id, expense_member_id=user_as_expense_member.id, amount=form.amount.data, note=form.note.data, date=form.date.data)
         db.session.add(transaction)
         db.session.commit()
         flash(f'Transaction for {expense.title} has been registered.', 'success')
         return redirect(url_for('main.index'))
     return render_template('create_transaction.html', title='Create transaction', form=form, expense=expense)
+
+@bp.route('/transaction_history', methods=['GET'])
+@login_required
+def transaction_history():
+    page_transaction = request.args.get('page_transaction', 1, type=int)
+    transactions = (
+            Transaction.query
+            .join(ExpenseMember, ExpenseMember.id == Transaction.expense_member_id)
+            .join(GroupMember, GroupMember.id == ExpenseMember.group_member_id)
+            .join(User, User.id == GroupMember.user_id)
+            .filter(User.id == current_user.id)
+            .paginate(page=page_transaction, per_page=1)
+        )
+    return render_template('transaction_history.html', title='Transaction history', transactions=transactions)
+
+@bp.route('/remove_transaction/<transaction_id>', methods=['POST'])
+@login_required
+def remove_transaction(transaction_id):
+    Transaction.query.filter_by(id=transaction_id).delete()
+    db.session.commit()
+    flash(f'Transaction has been deleted!', 'success')
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/transaction_expenses_history', methods=['GET'])
+@login_required
+def transaction_expenses_history():
+    page_expense = request.args.get('page_expense', 1, type=int)
+    expenses = Expense.query.paginate(page=page_expense, per_page=3)
+    page_transaction = request.args.get('page_transaction', 1, type=int)
+    transactions = Transaction.query.paginate(page=page_transaction, per_page=2)
+    return render_template('transaction_expenses_history.html', title='Transaction&Expenses history', transactions=transactions, expenses=expenses)

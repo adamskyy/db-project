@@ -26,7 +26,7 @@ class CreateGroup(FlaskForm):
 
     def __init__(self, owner_id, *args, **kwargs):
         super(CreateGroup, self).__init__(*args, **kwargs)
-        self.members.choices = [(user.id, user.username) for user in User.query.filter(User.id!=owner_id)]
+        self.members.choices = [(user.id, user.username) for user in User.query.filter(User.id != owner_id, User.is_admin == False)]
 
     def validate_group_name(self, group_name):
         group = Group.query.filter_by(name=group_name.data).first()
@@ -48,7 +48,7 @@ class EditGroup(FlaskForm):
         invited_members_ids = [inv.user_id for inv in invitations_to_group]
         requested_members_ids = [inv.user_id for inv in requests_to_group]
         list_of_ids_to_filter_out = curr_member_ids + invited_members_ids + requested_members_ids
-        self.members.choices = [(user.id, user.username) for user in User.query.filter(User.id.not_in(list_of_ids_to_filter_out))]
+        self.members.choices = [(user.id, user.username) for user in User.query.filter(User.id.not_in(list_of_ids_to_filter_out), User.is_admin == 0)]
         self.original_name = Group.query.filter_by(id=group_id).first().name
 
     def validate_group_name(self, group_name):

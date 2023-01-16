@@ -10,12 +10,12 @@ from app import db, login
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
-    about_me = db.Column(db.String(140))
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    email = db.Column(db.String(128), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    about_me = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
-    total_balance = db.Column(db.Float)
+    is_admin = db.Column(db.Boolean, default=False, nullable=False)
     groups = db.relationship("Group", secondary="group_member", backref=db.backref("users", lazy=True,cascade="all, delete, delete-orphan", passive_deletes=True, single_parent=True))
     membership_requests = db.relationship("MembershipRequest", cascade="all, delete, delete-orphan", passive_deletes=True, single_parent=True, backref=db.backref("user", lazy=True))
     invitations = db.relationship("Invitation",cascade="all, delete, delete-orphan", passive_deletes=True, single_parent=True, backref=db.backref("user", lazy=True))
@@ -99,13 +99,25 @@ class User(UserMixin, db.Model):
         total_debt = 0
         for debt in debts:
             total_debt += debt.amount_borrowed
+        users_debts = self.get_user_pending_debts()
+        for debt in users_debts:
+            total_debt -= debt.get_amount_paid(self)
         return total_debt
 
     def get_amount_of_payed_expenses(self):
         expenses = self.get_user_expenses()
         total_payed_for = 0
         for expense in expenses:
-            total_payed_for += expense.amount
+            total_payed_for += expense.get_amount_owed()
+            members = expense.get_members()
+            for member in members:
+                user = (
+                db.session.query(User)
+                .join(GroupMember, GroupMember.user_id == User.id)
+                .filter(GroupMember.id == member.group_member_id)
+                .first()
+                )
+                total_payed_for -= expense.get_amount_paid(user)
         return total_payed_for
 
 @login.user_loader
@@ -117,7 +129,7 @@ class Group(db.Model):
     name = db.Column(db.String(64), index=True, unique=True)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='CASCADE'))
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    description = db.Column(db.String(255))
+    description = db.Column(db.String(128))
     owner = db.relationship("User", foreign_keys=[owner_id], backref=db.backref("owned_groups", lazy=True, cascade="all, delete, delete-orphan", passive_deletes=True, single_parent=True))
     membership_requests = db.relationship("MembershipRequest", cascade="all, delete, delete-orphan", passive_deletes=True, single_parent=True, backref=db.backref("group", lazy=True))
     invitations = db.relationship("Invitation", cascade="all, delete, delete-orphan", passive_deletes=True, single_parent=True,  backref=db.backref("group", lazy=True))
@@ -143,8 +155,6 @@ class GroupMember(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey("group.id", ondelete='CASCADE'))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='CASCADE'))
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
-    membership_status = db.Column(db.String(255))
-
 
 
 class MembershipRequest(db.Model):
@@ -152,7 +162,7 @@ class MembershipRequest(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey("group.id", ondelete='CASCADE'))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='CASCADE'))
     request_date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(255))
+    status = db.Column(db.String(64), nullable=False)
 
     def cancel_request(self):
         self.status = 'cancelled'
@@ -171,7 +181,7 @@ class Invitation(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey("group.id", ondelete='CASCADE'))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete='CASCADE'))
     invitation_date = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(255))
+    status = db.Column(db.String(64), nullable=False)
 
     def accept_invitation(self, user):
         self.status = 'accepted'
@@ -186,10 +196,9 @@ class Invitation(db.Model):
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String)
-    amount = db.Column(db.Float)
-    description = db.Column(db.String)
-    date = db.Column(db.DateTime)
+    title = db.Column(db.String(64), unique=True, nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(128))
     lender_id = db.Column(db.Integer, db.ForeignKey("group_member.id",ondelete='CASCADE'), nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey("group.id",ondelete='CASCADE'), nullable=False)
     is_paid = db.Column(db.Boolean, default=False)
@@ -287,7 +296,7 @@ class Transaction(db.Model):
     expense_id = db.Column(db.Integer, db.ForeignKey("expense.id", ondelete='CASCADE'))
     expense_member_id = db.Column(db.Integer, db.ForeignKey("expense_member.id", ondelete='CASCADE'))
     amount = db.Column(db.Float)
-    note = db.Column(db.String(255))
+    note = db.Column(db.String(128))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     expense = db.relationship("Expense", foreign_keys=[expense_id], backref=db.backref("transactions", lazy=True))
     expense_member = db.relationship("ExpenseMember", foreign_keys=[expense_member_id], backref=db.backref("member_transactions", lazy=True))

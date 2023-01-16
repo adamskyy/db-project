@@ -4,6 +4,18 @@
 <div class="container">
     <div class="row">
         <h1>Registered groups:</h1>
+        <form
+            action="{{ url_for('main.explore', page_group=groups.page, page_user=users.page, user_filter=user_filter, group_filter=group_filter) }}"
+            method="GET" autocomplete="off">
+            <div class="row mt-2">
+                <div class="col-6">
+                    <input type="text" class="form-control my-2" name="group_filter" id="group_filter"
+                        placeholder="Search for specific group name:" />
+                </div>
+                <div class="col-6" align="left">
+                    <input type="submit" value="Search" class="form-control btn btn-primary my-2" name="group_filter">
+                </div>
+        </form>
         <div class="table-responsive">
             <table class="table table-sm mb-0">
                 <thead class="thead-dark">
@@ -38,7 +50,8 @@
         </div>
         <!-- Pagination Links-->
         <div class="text-right">
-            <a href="{{ url_for('main.explore', page_group=groups.prev_num) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.prev_num, user_filter=user_filter, group_filter=group_filter) }}"
+                class="btn btn-outline-dark
                {% if groups.page == 1 %}disabled{% endif %}">
                 &laquo;
             </a>
@@ -47,12 +60,12 @@
             {% if page_num_group %}
             <!-- Check for the active page and set the link to "Active"-->
             {% if groups.page == page_num_group %}
-            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=users.page) }}"
+            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=users.page, user_filter=user_filter, group_filter=group_filter) }}"
                 class="btn btn-dark">
                 {{ page_num_group }}
             </a>
             {% else %}
-            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=users.page) }}"
+            <a href="{{ url_for('main.explore', page_group=page_num_group, page_user=users.page, user_filter=user_filter, group_filter=group_filter) }}"
                 class="btn btn-outline-dark">
                 {{ page_num_group }}
             </a>
@@ -61,7 +74,8 @@
             ...
             {% endif %}
             {% endfor %}
-            <a href="{{ url_for('main.explore', page_group=groups.next_num, page_user=users.page) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.next_num, page_user=users.page, user_filter=user_filter, group_filter=group_filter) }}"
+                class="btn btn-outline-dark
                {% if groups.page == groups.pages %}disabled{% endif %}">
                 &raquo;
             </a>
@@ -71,6 +85,18 @@
         </p>
     </div>
     <div class="row">
+        <form
+            action="{{ url_for('main.explore', page_group=groups.page, page_user=users.page, user_filter=user_filter, group_filter=group_filter) }}"
+            method="GET" autocomplete="off">
+            <div class="row mt-2">
+                <div class="col-6">
+                    <input type="text" class="form-control my-2" name="user_filter" id="user_filter"
+                        placeholder="Search for specific username:" />
+                </div>
+                <div class="col-6" align="left">
+                    <input type="submit" value="Search" class="form-control btn btn-primary my-2" name="user_filter">
+                </div>
+        </form>
         <h1>Registered users:</h1>
         <div class="table-responsive">
             <table class="table table-sm mb-0">
@@ -104,7 +130,8 @@
         </div>
         <!-- Pagination Links-->
         <div class="text-right">
-            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=users.prev_num) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=users.prev_num, user_filter=user_filter, group_filter=group_filter) }}"
+                class="btn btn-outline-dark
                        {% if users.page == 1 %}disabled{% endif %}">
                 &laquo;
             </a>
@@ -113,12 +140,12 @@
             {% if page_num_user %}
             <!-- Check for the active page and set the link to "Active"-->
             {% if users.page == page_num_user %}
-            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=page_num_user) }}"
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=page_num_user, user_filter=user_filter, group_filter=group_filter) }}"
                 class="btn btn-dark">
                 {{ page_num_user }}
             </a>
             {% else %}
-            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=page_num_user) }}"
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=page_num_user, user_filter=user_filter, group_filter=group_filter) }}"
                 class="btn btn-outline-dark">
                 {{ page_num_user }}
             </a>
@@ -127,7 +154,8 @@
             ...
             {% endif %}
             {% endfor %}
-            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=users.next_num) }}" class="btn btn-outline-dark
+            <a href="{{ url_for('main.explore', page_group=groups.page, page_user=users.next_num, user_filter=user_filter, group_filter=group_filter) }}"
+                class="btn btn-outline-dark
                        {% if users.page == users.pages %}disabled{% endif %}">
                 &raquo;
             </a>
