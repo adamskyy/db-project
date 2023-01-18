@@ -1,10 +1,10 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField, SelectMultipleField, SelectField, FloatField, DateField
-from wtforms.validators import DataRequired, Length, ValidationError, NumberRange
+from wtforms.validators import DataRequired, Length, ValidationError, NumberRange,Regexp
 from app.models import User, Group, GroupMember, Expense
 
 class EditProfileForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired(), Regexp(r'^[a-zA-Z0-9_]*$', message='Username can only contain letters, numbers, and underscores'), Length(min=8, max=20, message='Username must be between 8 and 20 characters long')])
     about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
     submit = SubmitField('Submit')
 

@@ -35,14 +35,14 @@ def user(username):
         page_invitation = request.args.get('page_invitation', 1, type=int)
         page_request = request.args.get('page_request', 1, type=int)
         groups_id = [group.id for group in user.groups]
-        groups = Group.query.filter(Group.id.in_(groups_id)).paginate(page=page_group, per_page=1)
-        invitations = Invitation.query.filter_by(user_id=user.id).paginate(page=page_invitation, per_page=1)
-        requests = MembershipRequest.query.filter_by(user_id=user.id).paginate(page=page_request, per_page=1)
+        groups = Group.query.filter(Group.id.in_(groups_id)).paginate(page=page_group, per_page=3)
+        invitations = Invitation.query.filter_by(user_id=user.id).paginate(page=page_invitation, per_page=3)
+        requests = MembershipRequest.query.filter_by(user_id=user.id).paginate(page=page_request, per_page=3)
         return render_template('user.html', title='User page', user=user, groups=groups, invitations=invitations, requests=requests)
     users_groups_id = [group.id for group in user.groups]
     common_groups_id = [group.id for group in current_user.groups if group.id in users_groups_id]
     page_common_group = request.args.get('page_common_group', 1, type=int)
-    common_groups = Group.query.filter(Group.id.in_(common_groups_id)).paginate(page=page_common_group, per_page=1)
+    common_groups = Group.query.filter(Group.id.in_(common_groups_id)).paginate(page=page_common_group, per_page=3)
     return render_template('user.html', title='User page', user=user, common_groups=common_groups)
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
@@ -100,19 +100,19 @@ def decline_invitation(invitation_id):
 def group(groupname):
     group = Group.query.filter_by(name=groupname).first_or_404()
     page_expense = request.args.get('page_expense', 1, type=int)
-    group_expenses = Expense.query.filter(Expense.group_id == group.id).paginate(page=page_expense, per_page=1)
+    group_expenses = Expense.query.filter(Expense.group_id == group.id).paginate(page=page_expense, per_page=3)
     if current_user.id == group.owner.id or current_user.is_admin:
         page_user = request.args.get('page_user', 1, type=int)
         page_request = request.args.get('page_request', 1, type=int)
         page_invitation = request.args.get('page_invitation', 1, type=int)
         users_id = [user.id for user in group.users]
-        group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=1)
-        group_requests = MembershipRequest.query.filter_by(group_id=group.id).paginate(page=page_request, per_page=1)
-        group_invitations = Invitation.query.filter_by(group_id=group.id).paginate(page=page_invitation, per_page=1)
+        group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=3)
+        group_requests = MembershipRequest.query.filter_by(group_id=group.id).paginate(page=page_request, per_page=3)
+        group_invitations = Invitation.query.filter_by(group_id=group.id).paginate(page=page_invitation, per_page=3)
         return render_template('group_admin.html', title='Group page', group=group, group_requests=group_requests, group_users=group_users, group_invitations=group_invitations, group_expenses=group_expenses)
     page_user = request.args.get('page_user', 1, type=int)
     users_id = [user.id for user in group.users]
-    group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=1)
+    group_users = User.query.filter(User.id.in_(users_id)).paginate(page=page_user, per_page=3)
     return render_template('group.html', title='Group page', group=group, group_users=group_users, group_expenses=group_expenses)
 
 
@@ -191,10 +191,9 @@ def discard_membership_request(request_id):
 @login_required
 def quit_from_group(group_id):
     group_name = Group.query.filter_by(id=group_id).first_or_404().name
-    groupMember = GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first_or_404()
     prev_Invitation = Invitation.query.filter_by(group_id=group_id, user_id=current_user.id).first()
     prev_Memb_requests = MembershipRequest.query.filter_by(group_id=group_id, user_id=current_user.id).first()
-    db.session.delete(groupMember)
+    GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).delete()
     if prev_Invitation is not None:
         db.session.delete(prev_Invitation)
     if prev_Memb_requests is not None:
@@ -280,8 +279,8 @@ def explore():
     page_user = request.args.get('page_user', 1, type=int)
     user_filter = request.args.get('user_filter', "", type=str)
     group_filter = request.args.get('group_filter', "", type=str)
-    groups = Group.query.filter(Group.name.like(f"%{group_filter}%")).paginate(page=page_group, per_page=2)
-    users = User.query.filter(User.username.like(f"%{user_filter}%"), User.is_admin == False).paginate(page=page_user, per_page=2)
+    groups = Group.query.filter(Group.name.like(f"%{group_filter}%")).paginate(page=page_group, per_page=5)
+    users = User.query.filter(User.username.like(f"%{user_filter}%"), User.is_admin == False).paginate(page=page_user, per_page=5)
     return render_template('explore.html', title='Explore', groups=groups, users=users, group_filter=group_filter, user_filter=user_filter)
 
 
@@ -340,7 +339,7 @@ def transaction_history():
             .join(GroupMember, GroupMember.id == ExpenseMember.group_member_id)
             .join(User, User.id == GroupMember.user_id)
             .filter(User.id == current_user.id)
-            .paginate(page=page_transaction, per_page=1)
+            .paginate(page=page_transaction, per_page=5)
         )
     return render_template('transaction_history.html', title='Transaction history', transactions=transactions)
 
@@ -359,5 +358,5 @@ def transaction_expenses_history():
     page_expense = request.args.get('page_expense', 1, type=int)
     expenses = Expense.query.paginate(page=page_expense, per_page=3)
     page_transaction = request.args.get('page_transaction', 1, type=int)
-    transactions = Transaction.query.paginate(page=page_transaction, per_page=2)
+    transactions = Transaction.query.paginate(page=page_transaction, per_page=3)
     return render_template('transaction_expenses_history.html', title='Transaction&Expenses history', transactions=transactions, expenses=expenses)

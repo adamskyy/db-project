@@ -41,7 +41,8 @@
                         <img src="{{ group.avatar(64) }}" alt="Group Avatar" class="img-thumbnail">
                         <br>
                         <br>
-                        <a href="" class="btn btn-primary">Visit Group</a>
+                        <a href="{{ url_for('main.group', groupname=group.name) }}" class="btn btn-primary">Visit
+                            Group</a>
                     </div>
                 </div>
                 {% endfor %}
