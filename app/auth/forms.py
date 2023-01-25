@@ -5,14 +5,14 @@ from app.models import User
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Regexp(r'^[a-zA-Z0-9_]*$', message='Username can only contain letters, numbers, and underscores'), Length(min=8, max=20, message='Username must be between 8 and 20 characters long')])
-    password = PasswordField('Password', validators=[DataRequired(), Regexp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$', message='Password must be 8-20 characters long and contain letters and numbers')])
+    password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember me')
     submit = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Regexp(r'^[a-zA-Z0-9_]*$', message='Username can only contain letters, numbers, and underscores'), Length(min=8, max=20, message='Username must be between 8 and 20 characters long')])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Regexp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$', message='Password must be 8-20 characters long and contain letters and numbers')])
+    password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
 

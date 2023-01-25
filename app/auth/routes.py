@@ -6,6 +6,7 @@ from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User, Invitation
 from app.email import send_password_reset_email
+from flask import request
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():

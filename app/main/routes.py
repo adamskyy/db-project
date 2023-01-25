@@ -290,14 +290,18 @@ def create_expense(group_id):
     group = Group.query.filter_by(id=group_id).first_or_404()
     form = CreateExpense(group_id, current_user.id)
     if form.validate_on_submit():
-        lender = GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first_or_404()
-        expense = Expense(title=form.title.data, amount=form.amount.data, description=form.description.data, lender_id=lender.id, group_id=group_id, is_paid=False)
-        db.session.add(expense)
-        expense.add_members(form.members.data)
-        db.session.commit()
-        expense.set_amount_borrowed()
-        db.session.commit()
-        flash(f'Expense - {expense.title} has been created.', 'success')
+        try:
+            lender = GroupMember.query.filter_by(group_id=group_id, user_id=current_user.id).first_or_404()
+            expense = Expense(title=form.title.data, amount=form.amount.data, description=form.description.data, lender_id=lender.id, group_id=group_id, is_paid=False)
+            db.session.add(expense)
+            expense.add_members(form.members.data)
+            db.session.commit()
+            expense.set_amount_borrowed()
+            db.session.commit()
+            flash(f'Expense - {expense.title} has been created.', 'success')
+        except:
+            db.session.rollback()
+            flash(f'Expense - {expense.title} has not been created.', 'danger')
         return redirect(url_for('main.index'))
     return render_template('create_expense.html', title='Create expense', form=form, groupname=group.name)
 
@@ -322,10 +326,14 @@ def create_transaction(expense_id):
             .first()
         )
     if form.validate_on_submit():
-        transaction = Transaction(expense_id=expense_id, expense_member_id=user_as_expense_member.id, amount=form.amount.data, note=form.note.data, date=form.date.data)
-        db.session.add(transaction)
-        db.session.commit()
-        flash(f'Transaction for {expense.title} has been registered.', 'success')
+        try:
+            transaction = Transaction(expense_id=expense_id, expense_member_id=user_as_expense_member.id, amount=form.amount.data, note=form.note.data, date=form.date.data)
+            db.session.add(transaction)
+            db.session.commit()
+            flash(f'Transaction for {expense.title} has been registered.', 'success')
+        except:
+            db.session.rollback()
+            flash(f'Transaction for {expense.title} has not been registered.', 'danger')
         return redirect(url_for('main.index'))
     return render_template('create_transaction.html', title='Create transaction', form=form, expense=expense)
 
